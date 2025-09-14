@@ -6,7 +6,7 @@
   <style>
     body {
       font-family: "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #2c3e50, #4ca1af);
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
       color: #fff;
       text-align: center;
       margin: 0;
@@ -16,21 +16,22 @@
       margin: 20px;
       font-weight: 600;
       letter-spacing: 2px;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
     }
     .card {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 16px;
-      padding: 20px;
+      padding: 25px;
       margin: 20px auto;
       max-width: 400px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.35);
     }
     .slot-selector {
       margin-bottom: 15px;
+      font-size: 15px;
     }
     select {
-      padding: 6px 10px;
+      padding: 8px 14px;
       border-radius: 6px;
       border: none;
       font-size: 14px;
@@ -40,25 +41,35 @@
       margin: 20px 0;
       line-height: 1.6;
     }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
     .buttons button {
-      margin: 8px;
-      padding: 12px 24px;
-      font-size: 15px;
+      flex: 1 1 40%;
+      min-width: 120px;
+      margin: 5px;
+      padding: 14px 20px;
+      font-size: 16px;
       font-weight: 600;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       transition: 0.25s;
       color: #fff;
     }
     .buttons button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
     }
     .btn-train { background: #27ae60; }
     .btn-kire { background: #2980b9; }
     .btn-reset { background: #f39c12; }
     .btn-explode { background: #c0392b; }
+
+    /* ヒビ演出 */
     #crack-container {
       position: fixed;
       top: 0; left: 0;
@@ -69,8 +80,18 @@
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: url('https://i.ibb.co/ZcxmCMN/crack.png') center/cover no-repeat;
-      opacity: 0.2;
+      background: repeating-linear-gradient(
+        60deg,
+        rgba(255,255,255,0.15),
+        rgba(255,255,255,0.15) 2px,
+        transparent 2px,
+        transparent 6px
+      );
+      animation: crackAnim 0.3s ease;
+    }
+    @keyframes crackAnim {
+      from { opacity: 0; }
+      to { opacity: 0.4; }
     }
   </style>
 </head>
@@ -79,11 +100,11 @@
 
   <div class="card">
     <div class="slot-selector">
-      スロット選択:
+      データ選択:
       <select id="slotSelect">
-        <option value="slot1">slot1</option>
-        <option value="slot2">slot2</option>
-        <option value="slot3">slot3</option>
+        <option value="data1">データ1</option>
+        <option value="data2">データ2</option>
+        <option value="data3">データ3</option>
       </select>
     </div>
 
@@ -103,9 +124,11 @@
   <div id="crack-container"></div>
 
   <script>
-    let currentSlot = 'slot1';
+    let currentSlot = 'data1';
+    let crackLevel = 0;
+    const crackLimit = 5; // 爆破回数しきい値
 
-    // スロット変更
+    // スロット切替
     document.getElementById('slotSelect').addEventListener('change', (e) => {
       currentSlot = e.target.value;
       loadCounts();
@@ -136,17 +159,24 @@
       }
     }
 
-    // 爆破（ヒビ＋リセット）
+    // 爆破処理
     function explode() {
-      // ヒビ追加
+      crackLevel++;
       let container = document.getElementById('crack-container');
       let crack = document.createElement('div');
       crack.className = 'crack';
+      crack.style.opacity = Math.min(0.15 * crackLevel, 0.7);
       container.appendChild(crack);
 
-      // 即リセット
-      saveCounts(0,0);
-      loadCounts();
+      if (crackLevel >= crackLimit) {
+        // 表示中データをリセット
+        saveCounts(0,0);
+        loadCounts();
+        // ヒビをクリア
+        container.innerHTML = '';
+        crackLevel = 0;
+        alert("💥 爆破！データをリセットしました。");
+      }
     }
 
     // 初期化
