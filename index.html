@@ -11,6 +11,7 @@
       text-align: center;
       margin: 0;
       padding: 0;
+      overflow-x: hidden;
     }
     h1 {
       margin: 20px;
@@ -25,6 +26,7 @@
       margin: 20px auto;
       max-width: 400px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+      transition: transform 0.5s ease, opacity 0.5s ease;
     }
     .slot-selector {
       margin-bottom: 15px;
@@ -75,30 +77,48 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
       pointer-events: none;
+      overflow: hidden;
     }
     .crack {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: repeating-linear-gradient(
-        60deg,
-        rgba(255,255,255,0.15),
-        rgba(255,255,255,0.15) 2px,
-        transparent 2px,
-        transparent 6px
-      );
-      animation: crackAnim 0.3s ease;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 0.2;
+      transform: scale(0);
+      animation: crackAnim 0.4s forwards;
     }
     @keyframes crackAnim {
-      from { opacity: 0; }
-      to { opacity: 0.4; }
+      to { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    /* 爆破フラッシュ */
+    .flash {
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background:#fff;
+      opacity:0;
+      pointer-events:none;
+      animation: flashAnim 0.6s forwards;
+    }
+    @keyframes flashAnim {
+      0% { opacity:0; }
+      30% { opacity:1; }
+      100% { opacity:0; }
+    }
+
+    /* 崩壊 */
+    .explode-card {
+      transform: scale(1.2) rotate(10deg);
+      opacity: 0;
     }
   </style>
 </head>
 <body>
   <h1>切れ者カウンター</h1>
 
-  <div class="card">
+  <div class="card" id="mainCard">
     <div class="slot-selector">
       データ選択:
       <select id="slotSelect">
@@ -126,7 +146,7 @@
   <script>
     let currentSlot = 'data1';
     let crackLevel = 0;
-    const crackLimit = 5; // 爆破回数しきい値
+    const crackLimit = 5;
 
     // スロット切替
     document.getElementById('slotSelect').addEventListener('change', (e) => {
@@ -162,20 +182,36 @@
     // 爆破処理
     function explode() {
       crackLevel++;
+
+      // ヒビをランダム配置
       let container = document.getElementById('crack-container');
       let crack = document.createElement('div');
       crack.className = 'crack';
-      crack.style.opacity = Math.min(0.15 * crackLevel, 0.7);
+      crack.style.top = Math.random() * window.innerHeight + "px";
+      crack.style.left = Math.random() * window.innerWidth + "px";
       container.appendChild(crack);
 
       if (crackLevel >= crackLimit) {
-        // 表示中データをリセット
-        saveCounts(0,0);
-        loadCounts();
-        // ヒビをクリア
-        container.innerHTML = '';
-        crackLevel = 0;
-        alert("💥 爆破！データをリセットしました。");
+        // フラッシュ
+        let flash = document.createElement('div');
+        flash.className = 'flash';
+        document.body.appendChild(flash);
+
+        // 崩壊アニメーション
+        let card = document.getElementById('mainCard');
+        card.classList.add('explode-card');
+
+        setTimeout(() => {
+          // データリセット
+          saveCounts(0,0);
+          loadCounts();
+
+          // 画面リセット
+          container.innerHTML = '';
+          crackLevel = 0;
+          card.classList.remove('explode-card');
+          flash.remove();
+        }, 800);
       }
     }
 
