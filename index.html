@@ -9,14 +9,33 @@
       background: linear-gradient(135deg, #141E30, #243B55);
       color: #fff;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
       min-height: 100vh;
       margin: 0;
     }
-    .container {
-      display: flex;
-      gap: 20px;
+    .slot-selector {
+      margin-bottom: 20px;
+    }
+    .slot-selector button {
+      background: #ff9966;
+      background: linear-gradient(45deg, #ff5e62, #ff9966);
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      margin: 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .slot-selector button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    .slot-selector button.active {
+      box-shadow: 0 0 10px #fff;
     }
     .card {
       background: rgba(255, 255, 255, 0.1);
@@ -24,7 +43,7 @@
       border-radius: 16px;
       text-align: center;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      width: 200px;
+      width: 220px;
       transition: transform 0.2s ease-in-out;
       position: relative;
     }
@@ -36,7 +55,7 @@
       font-size: 18px;
       margin: 8px 0;
     }
-    button {
+    button.action {
       background: #00c6ff;
       background: linear-gradient(45deg, #0072ff, #00c6ff);
       border: none;
@@ -48,11 +67,11 @@
       font-size: 14px;
       transition: transform 0.1s, box-shadow 0.1s;
     }
-    button:hover {
+    button.action:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     }
-    button:active {
+    button.action:active {
       transform: scale(0.95);
     }
     .shake {
@@ -71,42 +90,29 @@
     }
     @keyframes fly {
       0% { transform: translate(0, 0) scale(1); opacity: 1; }
-      100% { transform: translate(500px, -500px) scale(0.1); opacity: 0; }
+      100% { transform: var(--fly-x, 300px) var(--fly-y, -300px) scale(0.1); opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card" id="slot1">
-      <h2>データ1</h2>
-      <div class="count">育成回数: <span id="grow1">0</span></div>
-      <div class="count">切れ者: <span id="kire1">0</span></div>
-      <button onclick="increment('grow', 1)">育成回数</button>
-      <button onclick="increment('kire', 1)">切れ者</button>
-      <button onclick="resetCounts(1)">リセット</button>
-      <button onclick="explode(1)">爆破</button>
-    </div>
-    <div class="card" id="slot2">
-      <h2>データ2</h2>
-      <div class="count">育成回数: <span id="grow2">0</span></div>
-      <div class="count">切れ者: <span id="kire2">0</span></div>
-      <button onclick="increment('grow', 2)">育成回数</button>
-      <button onclick="increment('kire', 2)">切れ者</button>
-      <button onclick="resetCounts(2)">リセット</button>
-      <button onclick="explode(2)">爆破</button>
-    </div>
-    <div class="card" id="slot3">
-      <h2>データ3</h2>
-      <div class="count">育成回数: <span id="grow3">0</span></div>
-      <div class="count">切れ者: <span id="kire3">0</span></div>
-      <button onclick="increment('grow', 3)">育成回数</button>
-      <button onclick="increment('kire', 3)">切れ者</button>
-      <button onclick="resetCounts(3)">リセット</button>
-      <button onclick="explode(3)">爆破</button>
-    </div>
+  <div class="slot-selector">
+    <button id="btn1" onclick="selectSlot(1)">データ1</button>
+    <button id="btn2" onclick="selectSlot(2)">データ2</button>
+    <button id="btn3" onclick="selectSlot(3)">データ3</button>
+  </div>
+
+  <div class="card" id="card">
+    <h2 id="title">データ1</h2>
+    <div class="count">育成回数: <span id="grow">0</span></div>
+    <div class="count">切れ者: <span id="kire">0</span></div>
+    <button class="action" onclick="increment('grow')">育成回数</button>
+    <button class="action" onclick="increment('kire')">切れ者</button>
+    <button class="action" onclick="resetCounts()">リセット</button>
+    <button class="action" onclick="explode()">爆破</button>
   </div>
 
   <script>
+    let currentSlot = 1;
     let data = JSON.parse(localStorage.getItem('umamusumeData')) || {
       1: { grow: 0, kire: 0, cracks: 0 },
       2: { grow: 0, kire: 0, cracks: 0 },
@@ -118,38 +124,57 @@
     }
 
     function render() {
+      const slot = data[currentSlot];
+      document.getElementById("title").innerText = `データ${currentSlot}`;
+      document.getElementById("grow").innerText = slot.grow;
+      document.getElementById("kire").innerText = slot.kire;
+
       for (let i = 1; i <= 3; i++) {
-        document.getElementById(`grow${i}`).innerText = data[i].grow;
-        document.getElementById(`kire${i}`).innerText = data[i].kire;
+        document.getElementById(`btn${i}`).classList.remove("active");
       }
+      document.getElementById(`btn${currentSlot}`).classList.add("active");
     }
 
-    function increment(type, slot) {
-      data[slot][type]++;
-      data[slot].cracks = 0; // 爆破カウントリセット
-      document.getElementById(`slot${slot}`).classList.remove('shake', 'fly-away');
+    function selectSlot(slot) {
+      currentSlot = slot;
+      document.getElementById("card").classList.remove("shake", "fly-away");
+      render();
+    }
+
+    function increment(type) {
+      data[currentSlot][type]++;
+      data[currentSlot].cracks = 0; // 爆破カウントリセット
+      document.getElementById("card").classList.remove("shake", "fly-away");
       render();
       saveData();
     }
 
-    function resetCounts(slot) {
-      data[slot] = { grow: 0, kire: 0, cracks: 0 };
-      document.getElementById(`slot${slot}`).classList.remove('shake', 'fly-away');
+    function resetCounts() {
+      data[currentSlot] = { grow: 0, kire: 0, cracks: 0 };
+      document.getElementById("card").classList.remove("shake", "fly-away");
       render();
       saveData();
     }
 
-    function explode(slot) {
-      const card = document.getElementById(`slot${slot}`);
-      data[slot].cracks++;
-      card.classList.add('shake');
+    function explode() {
+      const card = document.getElementById("card");
+      data[currentSlot].cracks++;
+      card.classList.add("shake");
 
-      if (data[slot].cracks >= 5) {
-        card.classList.remove('shake');
-        card.classList.add('fly-away');
+      if (data[currentSlot].cracks >= 5) {
+        const randomX = (Math.random() * 800 - 400) + "px";
+        const randomY = (Math.random() * -600 - 100) + "px";
+        card.style.setProperty("--fly-x", randomX);
+        card.style.setProperty("--fly-y", randomY);
+
+        card.classList.remove("shake");
+        card.classList.add("fly-away");
+
         setTimeout(() => {
-          resetCounts(slot);
-          card.classList.remove('fly-away');
+          resetCounts();
+          card.classList.remove("fly-away");
+          card.style.setProperty("--fly-x", "300px");
+          card.style.setProperty("--fly-y", "-300px");
         }, 800);
       }
       saveData();
