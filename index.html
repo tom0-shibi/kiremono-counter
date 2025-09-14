@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>切れ者カウンター</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    h1 { margin: 20px; }
+    .slot-selector {
+      margin: 10px;
+    }
+    .counter {
+      margin: 20px;
+      font-size: 1.2em;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #crack-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    .crack {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('https://i.ibb.co/ZcxmCMN/crack.png') center/cover no-repeat;
+      opacity: 0.2;
+    }
+    .exploded {
+      background: black;
+      color: red;
+      font-size: 2em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>切れ者カウンター</h1>
+
+  <div class="slot-selector">
+    スロット選択: 
+    <select id="slotSelect"></select>
+    <button onclick="addSlot()">＋スロット追加</button>
+  </div>
+
+  <div class="counter">
+    育成回数: <span id="trainCount">0</span><br>
+    切れ者回数: <span id="kiremonoCount">0</span>
+  </div>
+
+  <button onclick="increment('train')">育成回数</button>
+  <button onclick="increment('kiremono')">切れ者</button>
+  <button onclick="resetCounts()">リセット</button>
+  <button onclick="explode()">爆破</button>
+
+  <div id="crack-container"></div>
+
+  <script>
+    let currentSlot = 'slot1';
+    let crackLevel = 0;
+
+    // スロット管理
+    function loadSlots() {
+      let slots = JSON.parse(localStorage.getItem('slots')) || ['slot1'];
+      const select = document.getElementById('slotSelect');
+      select.innerHTML = '';
+      slots.forEach(s => {
+        let opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        select.appendChild(opt);
+      });
+      currentSlot = slots[0];
+      select.value = currentSlot;
+      loadCounts();
+    }
+
+    function addSlot() {
+      let slots = JSON.parse(localStorage.getItem('slots')) || [];
+      let newSlot = `slot${slots.length+1}`;
+      slots.push(newSlot);
+      localStorage.setItem('slots', JSON.stringify(slots));
+      loadSlots();
+      document.getElementById('slotSelect').value = newSlot;
+      currentSlot = newSlot;
+      saveCounts(0, 0);
+      loadCounts();
+    }
+
+    document.getElementById('slotSelect').addEventListener('change', (e)=>{
+      currentSlot = e.target.value;
+      loadCounts();
+    });
+
+    // カウント管理
+    function loadCounts() {
+      let data = JSON.parse(localStorage.getItem(currentSlot)) || {train:0, kiremono:0};
+      document.getElementById('trainCount').textContent = data.train;
+      document.getElementById('kiremonoCount').textContent = data.kiremono;
+    }
+
+    function saveCounts(train, kiremono) {
+      localStorage.setItem(currentSlot, JSON.stringify({train, kiremono}));
+    }
+
+    function increment(type) {
+      let data = JSON.parse(localStorage.getItem(currentSlot)) || {train:0, kiremono:0};
+      data[type]++;
+      saveCounts(data.train, data.kiremono);
+      loadCounts();
+    }
+
+    function resetCounts() {
+      if (confirm("リセットしてよいですか？")) {
+        saveCounts(0,0);
+        loadCounts();
+      }
+    }
+
+    // 爆破機能
+    function explode() {
+      crackLevel++;
+      let container = document.getElementById('crack-container');
+      let crack = document.createElement('div');
+      crack.className = 'crack';
+      crack.style.opacity = Math.min(0.2 * crackLevel, 1);
+      container.appendChild(crack);
+
+      if (crackLevel >= 5) {
+        document.body.className = 'exploded';
+        document.body.innerHTML = "<div style='margin:auto;'>💥 爆破！ 💥</div>";
+        localStorage.clear();
+      }
+    }
+
+    // 初期化
+    loadSlots();
+  </script>
+</body>
+</html>
