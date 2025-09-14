@@ -5,218 +5,157 @@
   <title>切れ者カウンター</title>
   <style>
     body {
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #141E30, #243B55);
       color: #fff;
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       margin: 0;
-      padding: 0;
-      overflow-x: hidden;
     }
-    h1 {
-      margin: 20px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    .container {
+      display: flex;
+      gap: 20px;
     }
     .card {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
       border-radius: 16px;
-      padding: 25px;
-      margin: 20px auto;
-      max-width: 400px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.35);
-      transition: transform 0.5s ease, opacity 0.5s ease;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      width: 200px;
+      transition: transform 0.2s ease-in-out;
+      position: relative;
     }
-    .slot-selector {
-      margin-bottom: 15px;
-      font-size: 15px;
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
     }
-    select {
-      padding: 8px 14px;
-      border-radius: 6px;
+    .count {
+      font-size: 18px;
+      margin: 8px 0;
+    }
+    button {
+      background: #00c6ff;
+      background: linear-gradient(45deg, #0072ff, #00c6ff);
       border: none;
-      font-size: 14px;
-    }
-    .counter {
-      font-size: 1.3em;
-      margin: 20px 0;
-      line-height: 1.6;
-    }
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-    }
-    .buttons button {
-      flex: 1 1 40%;
-      min-width: 120px;
-      margin: 5px;
-      padding: 14px 20px;
-      font-size: 16px;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
+      color: white;
+      padding: 8px 12px;
+      margin: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.25s;
-      color: #fff;
+      font-size: 14px;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    .buttons button:hover {
+    button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
     }
-    .btn-train { background: #27ae60; }
-    .btn-kire { background: #2980b9; }
-    .btn-reset { background: #f39c12; }
-    .btn-explode { background: #c0392b; }
-
-    /* ヒビ演出 */
-    #crack-container {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      overflow: hidden;
+    button:active {
+      transform: scale(0.95);
     }
-    .crack {
-      position: absolute;
-      width: 200px; height: 200px;
-      background: radial-gradient(circle, rgba(255,255,255,0.7) 1px, transparent 1px);
-      background-size: 20px 20px;
-      opacity: 0.2;
-      transform: scale(0);
-      animation: crackAnim 0.4s forwards;
+    .shake {
+      animation: shake 0.3s infinite;
     }
-    @keyframes crackAnim {
-      to { transform: scale(1.5); opacity: 0.5; }
+    @keyframes shake {
+      0% { transform: translate(2px, 1px) rotate(0deg); }
+      20% { transform: translate(-1px, -2px) rotate(-1deg); }
+      40% { transform: translate(-3px, 0px) rotate(1deg); }
+      60% { transform: translate(3px, 2px) rotate(0deg); }
+      80% { transform: translate(1px, -1px) rotate(1deg); }
+      100% { transform: translate(-1px, 2px) rotate(-1deg); }
     }
-
-    /* 爆破フラッシュ */
-    .flash {
-      position: fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      background:#fff;
-      opacity:0;
-      pointer-events:none;
-      animation: flashAnim 0.6s forwards;
+    .fly-away {
+      animation: fly 0.8s forwards;
     }
-    @keyframes flashAnim {
-      0% { opacity:0; }
-      30% { opacity:1; }
-      100% { opacity:0; }
-    }
-
-    /* 崩壊 */
-    .explode-card {
-      transform: scale(1.2) rotate(10deg);
-      opacity: 0;
+    @keyframes fly {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(500px, -500px) scale(0.1); opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <h1>切れ者カウンター</h1>
-
-  <div class="card" id="mainCard">
-    <div class="slot-selector">
-      データ選択:
-      <select id="slotSelect">
-        <option value="data1">データ1</option>
-        <option value="data2">データ2</option>
-        <option value="data3">データ3</option>
-      </select>
+  <div class="container">
+    <div class="card" id="slot1">
+      <h2>データ1</h2>
+      <div class="count">育成回数: <span id="grow1">0</span></div>
+      <div class="count">切れ者: <span id="kire1">0</span></div>
+      <button onclick="increment('grow', 1)">育成回数</button>
+      <button onclick="increment('kire', 1)">切れ者</button>
+      <button onclick="resetCounts(1)">リセット</button>
+      <button onclick="explode(1)">爆破</button>
     </div>
-
-    <div class="counter">
-      育成回数: <span id="trainCount">0</span><br>
-      切れ者回数: <span id="kiremonoCount">0</span>
+    <div class="card" id="slot2">
+      <h2>データ2</h2>
+      <div class="count">育成回数: <span id="grow2">0</span></div>
+      <div class="count">切れ者: <span id="kire2">0</span></div>
+      <button onclick="increment('grow', 2)">育成回数</button>
+      <button onclick="increment('kire', 2)">切れ者</button>
+      <button onclick="resetCounts(2)">リセット</button>
+      <button onclick="explode(2)">爆破</button>
     </div>
-
-    <div class="buttons">
-      <button class="btn-train" onclick="increment('train')">育成回数</button>
-      <button class="btn-kire" onclick="increment('kiremono')">切れ者</button>
-      <button class="btn-reset" onclick="resetCounts()">リセット</button>
-      <button class="btn-explode" onclick="explode()">爆破</button>
+    <div class="card" id="slot3">
+      <h2>データ3</h2>
+      <div class="count">育成回数: <span id="grow3">0</span></div>
+      <div class="count">切れ者: <span id="kire3">0</span></div>
+      <button onclick="increment('grow', 3)">育成回数</button>
+      <button onclick="increment('kire', 3)">切れ者</button>
+      <button onclick="resetCounts(3)">リセット</button>
+      <button onclick="explode(3)">爆破</button>
     </div>
   </div>
 
-  <div id="crack-container"></div>
-
   <script>
-    let currentSlot = 'data1';
-    let crackLevel = 0;
-    const crackLimit = 5;
+    let data = JSON.parse(localStorage.getItem('umamusumeData')) || {
+      1: { grow: 0, kire: 0, cracks: 0 },
+      2: { grow: 0, kire: 0, cracks: 0 },
+      3: { grow: 0, kire: 0, cracks: 0 }
+    };
 
-    // スロット切替
-    document.getElementById('slotSelect').addEventListener('change', (e) => {
-      currentSlot = e.target.value;
-      loadCounts();
-    });
-
-    // カウント管理
-    function loadCounts() {
-      let data = JSON.parse(localStorage.getItem(currentSlot)) || {train:0, kiremono:0};
-      document.getElementById('trainCount').textContent = data.train;
-      document.getElementById('kiremonoCount').textContent = data.kiremono;
+    function saveData() {
+      localStorage.setItem('umamusumeData', JSON.stringify(data));
     }
 
-    function saveCounts(train, kiremono) {
-      localStorage.setItem(currentSlot, JSON.stringify({train, kiremono}));
-    }
-
-    function increment(type) {
-      let data = JSON.parse(localStorage.getItem(currentSlot)) || {train:0, kiremono:0};
-      data[type]++;
-      saveCounts(data.train, data.kiremono);
-      loadCounts();
-    }
-
-    function resetCounts() {
-      if (confirm("リセットしてよいですか？")) {
-        saveCounts(0,0);
-        loadCounts();
+    function render() {
+      for (let i = 1; i <= 3; i++) {
+        document.getElementById(`grow${i}`).innerText = data[i].grow;
+        document.getElementById(`kire${i}`).innerText = data[i].kire;
       }
     }
 
-    // 爆破処理
-    function explode() {
-      crackLevel++;
+    function increment(type, slot) {
+      data[slot][type]++;
+      data[slot].cracks = 0; // 爆破カウントリセット
+      document.getElementById(`slot${slot}`).classList.remove('shake', 'fly-away');
+      render();
+      saveData();
+    }
 
-      // ヒビをランダム配置
-      let container = document.getElementById('crack-container');
-      let crack = document.createElement('div');
-      crack.className = 'crack';
-      crack.style.top = Math.random() * window.innerHeight + "px";
-      crack.style.left = Math.random() * window.innerWidth + "px";
-      container.appendChild(crack);
+    function resetCounts(slot) {
+      data[slot] = { grow: 0, kire: 0, cracks: 0 };
+      document.getElementById(`slot${slot}`).classList.remove('shake', 'fly-away');
+      render();
+      saveData();
+    }
 
-      if (crackLevel >= crackLimit) {
-        // フラッシュ
-        let flash = document.createElement('div');
-        flash.className = 'flash';
-        document.body.appendChild(flash);
+    function explode(slot) {
+      const card = document.getElementById(`slot${slot}`);
+      data[slot].cracks++;
+      card.classList.add('shake');
 
-        // 崩壊アニメーション
-        let card = document.getElementById('mainCard');
-        card.classList.add('explode-card');
-
+      if (data[slot].cracks >= 5) {
+        card.classList.remove('shake');
+        card.classList.add('fly-away');
         setTimeout(() => {
-          // データリセット
-          saveCounts(0,0);
-          loadCounts();
-
-          // 画面リセット
-          container.innerHTML = '';
-          crackLevel = 0;
-          card.classList.remove('explode-card');
-          flash.remove();
+          resetCounts(slot);
+          card.classList.remove('fly-away');
         }, 800);
       }
+      saveData();
     }
 
-    // 初期化
-    loadCounts();
+    render();
   </script>
 </body>
 </html>
